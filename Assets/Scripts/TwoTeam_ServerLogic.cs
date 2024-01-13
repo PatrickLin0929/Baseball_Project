@@ -9,19 +9,35 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     int strikes, balls, outs;
     int scoreA, scoreB;
+    List<int> inningScoresA = new List<int> {0, 0, 0, 0};
+    List<int> inningScoresB = new List<int> {0, 0, 0, 0};
     bool onFirst, onSecond, onThird;
     int inning;
     string teamAtBat;
     bool pitchThrown;
+    bool gameEnded;
     string hiOutcome;
-    string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo;
+    string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo, finalScore;
     string pitchType, hitType;
 
     public AudioClip hitSoundClip, outSoundClip;
 
+    public Material pitcherIconBlue, pitcherIconRed, hitterIconBlue, hitterIconRed, runnerIconBlue, runnerIconRed, catcherIconBlue, catcherIconRed;
+
+    public Image imageToAnimate;
+    float frameRate = 5.0f;    // Frames per second.
+    int currentFrame = 0;     // Index of the current frame.
+    // float timer = 0.0f;       // Timer to control frame rate.
+    public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation;
+    List<Sprite> frames;
+
 
     List<string> choices = new List<string> { "Single", "Double", "Triple", "HomeRun", "Out" };
-    List<double> probabilities = new List<double> { 0.3, 0.15, 0.07, 0.06, 0.42 };
+    // Probabilities for Team A
+    List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
+    // Probabilities for Team B
+    List<double> probabilitiesTeamB = new List<double> { 0.28, 0.15, 0.07, 0.03, 0.47 };
+
 
     static string SelectChoiceWithProbability(List<string> choices, List<double> probabilities)
     {
@@ -54,6 +70,80 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     void Update()
     {
         UpdateTextGUI();
+        UpdateButtonGUI();
+        UpdateBaseBallFieldObject();
+    }
+
+    void StartImageAnimation(List<Sprite> animation)
+    {
+        frames = animation;
+        currentFrame = 0;
+        // timer = 0.0f;
+        imageToAnimate.sprite = frames[currentFrame];
+        StartCoroutine(AnimateImage());
+    }
+
+    private IEnumerator AnimateImage()
+    {
+        while (currentFrame < frames.Count)
+        {
+            yield return new WaitForSeconds(1.0f / frameRate);
+            currentFrame++;
+            if (currentFrame < frames.Count)
+            {
+                imageToAnimate.sprite = frames[currentFrame];
+            }
+        }
+    }
+
+
+    void UpdateBaseBallFieldObject()
+    {
+        // Object Level 1 for location id (version 1)
+
+        /* GameObject.Find("SphereFirst").GetComponent<Renderer>().enabled = onFirst;
+        GameObject.Find("SphereSecond").GetComponent<Renderer>().enabled = onSecond;
+        GameObject.Find("SphereThird").GetComponent<Renderer>().enabled = onThird;
+        GameObject.Find("SphereFirst").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
+        GameObject.Find("SphereSecond").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
+        GameObject.Find("SphereThird").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
+        
+        GameObject.Find("CubePitcher").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.blue : Color.red;
+        GameObject.Find("CubeHitter").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue; */
+
+        GameObject.Find("SphereFirst").GetComponent<Renderer>().enabled = false;
+        GameObject.Find("SphereSecond").GetComponent<Renderer>().enabled = false;
+        GameObject.Find("SphereThird").GetComponent<Renderer>().enabled = false;
+
+        // Object Level 2 for baseball player icon plane (version 2)
+
+        GameObject.Find("PlaneFirst").GetComponent<Renderer>().enabled = onFirst;
+        GameObject.Find("PlaneSecond").GetComponent<Renderer>().enabled = onSecond;
+        GameObject.Find("PlaneThird").GetComponent<Renderer>().enabled = onThird;
+        GameObject.Find("PlaneFirst").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
+        GameObject.Find("PlaneSecond").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
+        GameObject.Find("PlaneThird").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
+
+        GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
+        GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
+
+        GameObject.Find("PlaneCatcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? catcherIconBlue : catcherIconRed;
+    }
+
+    void UpdateButtonGUI()
+    {
+        if(gameEnded) {
+            GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
+            GameObject.Find("HitButton").GetComponent<Button>().interactable = false;
+        } else {
+            if(pitchThrown) {
+                GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
+                GameObject.Find("HitButton").GetComponent<Button>().interactable = true;
+            } else {
+                GameObject.Find("PitchButton").GetComponent<Button>().interactable = true;
+                GameObject.Find("HitButton").GetComponent<Button>().interactable = false;
+            }
+        }
     }
 
     void UpdateTextGUI()
@@ -65,13 +155,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         GameObject.Find("OutsInfoText").GetComponent<TextMeshProUGUI>().text = outsInfo;
         GameObject.Find("ScoreInfoText").GetComponent<TextMeshProUGUI>().text = scoreInfo;
         GameObject.Find("InningInfoText").GetComponent<TextMeshProUGUI>().text = inningInfo;
-        GameObject.Find("SphereFirst").GetComponent<Renderer>().enabled = onFirst;
-        GameObject.Find("SphereSecond").GetComponent<Renderer>().enabled = onSecond;
-        GameObject.Find("SphereThird").GetComponent<Renderer>().enabled = onThird;
-        GameObject.Find("SphereFirst").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
-        GameObject.Find("SphereSecond").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
-        GameObject.Find("SphereThird").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.red : Color.blue;
-        GameObject.Find("CubePitcher").GetComponent<Renderer>().material.color = (teamAtBat == "A") ? Color.blue : Color.red;
+        GameObject.Find("FinalScoreText").GetComponent<TextMeshProUGUI>().text = finalScore;
     }
 
     // Initialize the variables
@@ -93,6 +177,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         teamAtBat = "A";
 
         pitchThrown = false;
+        gameEnded = false;
 
         hiOutcome = "";
 
@@ -101,6 +186,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         outsInfo = "";
         scoreInfo = "";
         inningInfo = "";
+        finalScore= "";
 
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
@@ -108,13 +194,22 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     public void PitchButtonPressed()
     {
+        List<Sprite> pitcherAnimation = (teamAtBat == "A") ? pitcherBlueAnimation : pitcherRedAnimation;
+        StartImageAnimation(pitcherAnimation);
+        pitchThrown = true;
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         prompt = "The pitch was thrown. It's time to decide: Hit or Wait?";
     }
 
     public void HitButtonPressed()
     {
+        pitchThrown = false;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
+        if(hitType == "Hit") {
+            List<Sprite> hitterAnimation = (teamAtBat == "A") ? hitterRedAnimation : hitterBlueAnimation;
+            StartImageAnimation(hitterAnimation);
+        }
+        List<double> probabilities = (teamAtBat == "A") ? probabilitiesTeamA : probabilitiesTeamB;
         hiOutcome = SelectChoiceWithProbability(choices, probabilities);
         if(hitType == "Hit") {
             HitOutcomeProcessing();
@@ -154,7 +249,6 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         
         // Update the text prompt
         prompt = "The batter hit a " + hiOutcome;
-        //GameObject.Find("OutcomeText").GetComponent<TextMeshProUGUI>().text = "The batter hit a " + hiOutcome;
     }
 
     void WaitOutcomeProcessing() 
@@ -182,9 +276,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             UpdateGameStatus();
         }
     
-    // Update the text prompt
-    prompt = "The batter decided to wait. Balls: " + balls + " Strikes: " + strikes;
-  }
+        // Update the text prompt
+        prompt = "The batter decided to wait. Balls: " + balls + " Strikes: " + strikes;
+    }
 
     void MoveRunners(int bases)
     {
@@ -222,8 +316,12 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(hitSoundClip);
         if (teamAtBat == "A") {
             scoreA = scoreA + 1;
+            inningScoresA[inning] = inningScoresA[inning] + 1;
+            inningScoresA[0] = inningScoresA[0] + 1;
         } else {
             scoreB = scoreB + 1;
+            inningScoresB[inning] = inningScoresB[inning] + 1;
+            inningScoresB[0] = inningScoresB[0] + 1;
         }
         // Clear the bases after scoring
         onThird = false;
@@ -268,6 +366,18 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         teamAtBat = (teamAtBat == "A") ? "B" : "A";
         // Increment inning after bottom half
         if (teamAtBat == "A") { inning  = inning + 1; }
-        prompt = "End of the inning. Switch sides!";
+        // prompt = "End of the inning. Switch sides!";
+
+        // Check if the game should end after the second inning
+        if (inning > 3) {
+            gameEnded = true;
+            prompt = "Game over!";
+            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " (Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ")\n"
+                + "Team B: " + inningScoresB[0] + " (Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ")";
+            List<Sprite> winAnimation = (inningScoresA[0] > inningScoresB[0]) ? winRedAnimation : winBlueAnimation;
+            StartImageAnimation(winAnimation);
+        } else {
+            prompt  = "End of the inning. Switch sides!";
+        }
     }
 }

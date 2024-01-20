@@ -30,13 +30,24 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     // float timer = 0.0f;       // Timer to control frame rate.
     public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation;
     List<Sprite> frames;
+    bool strikeOrBall; // 1 = Strike, 0 = Ball
 
+    // "Miss", "Single", "Double", "Triple", "HomeRun", "Out" 
 
-    List<string> choices = new List<string> { "Single", "Double", "Triple", "HomeRun", "Out" };
+    List<string> choices = new List<string> { "Miss", "Single", "Double", "Triple", "HomeRun", "Out" };
     // Probabilities for Team A
-    List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
+    //List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
+    List<double> probabilitiesTeamAFastball = new List<double> { 0.18, 0.17, 0.14, 0.01, 0.04, 0.46 };
+    List<double> probabilitiesTeamACurveball = new List<double> { 0.25, 0.145, 0.15, 0.005, 0.05, 0.4 };
+    List<double> probabilitiesTeamASlider = new List<double> { 0.22, 0.156, 0.07, 0.004, 0.01, 0.54 };
     // Probabilities for Team B
-    List<double> probabilitiesTeamB = new List<double> { 0.28, 0.15, 0.07, 0.03, 0.47 };
+    //List<double> probabilitiesTeamB = new List<double> { 0.28, 0.15, 0.07, 0.03, 0.47 };
+    List<double> probabilitiesTeamBFastball = new List<double> { 0.15, 0.165, 0.14, 0.015, 0.05, 0.48 };
+    List<double> probabilitiesTeamBCurveball = new List<double> { 0.2, 0.1, 0.11, 0.02, 0.05, 0.52 };
+    List<double> probabilitiesTeamBSlider = new List<double> { 0.25, 0.14, 0.05, 0.01, 0.03, 0.52 };
+
+    List<float> probabilitiesWaitTeamA = new List<float> { 0.7f, 0.4f, 0.5f }; // Fastball, Curveball, Slider
+    List<float> probabilitiesWaitTeamB = new List<float> { 0.7f, 0.37f, 0.5f }; // Fastball, Curveball, Slider
 
 
     static string SelectChoiceWithProbability(List<string> choices, List<double> probabilities)
@@ -135,6 +146,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         if(gameEnded) {
             GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
             GameObject.Find("HitButton").GetComponent<Button>().interactable = false;
+            GameObject.Find("AutoplayButton").GetComponent<Button>().interactable = false;
         } else {
             if(pitchThrown) {
                 GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
@@ -190,6 +202,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
+
+        strikeOrBall = false;
     }
 
     public void PitchButtonPressed()
@@ -205,13 +219,28 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     {
         pitchThrown = false;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
-        if(hitType == "Hit") {
+        if(hitType == "Swing") {
             List<Sprite> hitterAnimation = (teamAtBat == "A") ? hitterRedAnimation : hitterBlueAnimation;
             StartImageAnimation(hitterAnimation);
         }
-        List<double> probabilities = (teamAtBat == "A") ? probabilitiesTeamA : probabilitiesTeamB;
-        hiOutcome = SelectChoiceWithProbability(choices, probabilities);
-        if(hitType == "Hit") {
+        if(teamAtBat == "A") {
+            if(pitchType == "Fastball") {
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamAFastball);
+            } else if(pitchType == "Curveball") {
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamACurveball);
+            } else if(pitchType == "Slider") { 
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamASlider);
+            }
+        } else {
+            if(pitchType == "Fastball") {
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBFastball);
+            } else if(pitchType == "Curveball") {
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBCurveball);
+            } else if(pitchType == "Slider") { 
+                hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBSlider);
+            }
+        }
+        if(hitType == "Swing") {
             HitOutcomeProcessing();
         } else {
             WaitOutcomeProcessing();
@@ -220,9 +249,6 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     void HitOutcomeProcessing()
     {
-        // Reset the strike and ball count after each hit or wait
-        strikes = 0;
-        balls = 0;
 
         if(hiOutcome == "Out") {
             outs = outs + 1;
@@ -230,13 +256,33 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
         } else {
             if (hiOutcome == "Single") {
+                // Reset the strike and ball count after each hit or wait
+                strikes = 0;
+                balls = 0;
                 MoveRunners(1);
             } else if (hiOutcome == "Double") {
+                // Reset the strike and ball count after each hit or wait
+                strikes = 0;
+                balls = 0;
                 MoveRunners(2);
             } else if (hiOutcome == "Triple") {
+                // Reset the strike and ball count after each hit or wait
+                strikes = 0;
+                balls = 0;
                 MoveRunners(3);
             } else if (hiOutcome == "HomeRun") {
+                // Reset the strike and ball count after each hit or wait
+                strikes = 0;
+                balls = 0;
                 MoveRunners(4);
+            } else if (hiOutcome == "Miss") {
+                strikes = Mathf.Min(strikes + 1, 3);
+                if(strikes == 3) {
+                    outs = outs + 1;
+                    strikes = 0;  // Reset strikes count after a strikeout
+                    GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+                    GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
+                }
             }
         }
 
@@ -253,10 +299,30 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     void WaitOutcomeProcessing() 
     {
-        if(pitchType == "Fastball") {
-            balls = Mathf.Min(balls + 1, 4);
+        if(teamAtBat == "A") {
+            // Adjust the strikes and balls based on pitch type for Team A
+            if(pitchType == "Fastball") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[0]) ? true : false;
+            } else if(pitchType == "Curveball") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[1]) ? true : false;
+            } else if(pitchType == "Slider") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[2]) ? true : false;
+            }
         } else {
+            // Adjust the strikes and balls based on pitch type for Team B
+            if(pitchType == "Fastball") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[0]) ? true : false;
+            } else if(pitchType == "Curveball") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[1]) ? true : false;
+            } else if(pitchType == "Slider") {
+                strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[2]) ? true : false;
+            }
+        }
+
+        if(strikeOrBall) {
             strikes = Mathf.Min(strikes + 1, 3);
+        } else {
+            balls = Mathf.Min(balls + 1, 4);
         }
         
         if(balls == 4) {
@@ -328,7 +394,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     }
 
     void UpdateGameStatus() {
-        onBaseInfo = "Runners on base - First: ";
+        onBaseInfo = "Runners on base - \nFirst: ";
         if (onFirst) {
             onBaseInfo = onBaseInfo + "Yes";
         } else {
@@ -378,6 +444,14 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             StartImageAnimation(winAnimation);
         } else {
             prompt  = "End of the inning. Switch sides!";
+        }
+    }
+
+    public void AutoCompletePressed() {
+        if(pitchThrown) {
+            HitButtonPressed();
+        } else {
+            PitchButtonPressed();
         }
     }
 }

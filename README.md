@@ -14,5 +14,6 @@ Unity 2022.3.4f1
 
 **Attribution for the icons used in the game:**
 Baseball pitcher and hitter icons created by Leremy - Flaticon
+
 [https://www.flaticon.com/packs/baseball-player](https://www.flaticon.com/packs/baseball-player)  
 [https://www.flaticon.com/packs/baseball-player-1](https://www.flaticon.com/packs/baseball-player-1)

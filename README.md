@@ -17,3 +17,6 @@ Baseball pitcher and hitter icons created by Leremy - Flaticon
 
 [https://www.flaticon.com/packs/baseball-player](https://www.flaticon.com/packs/baseball-player)  
 [https://www.flaticon.com/packs/baseball-player-1](https://www.flaticon.com/packs/baseball-player-1)
+
+TTS Audio Guiding - Guy
+[https://ttsfree.com/#google_vignette](https://ttsfree.com/#google_vignette)

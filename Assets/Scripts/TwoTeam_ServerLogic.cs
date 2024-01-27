@@ -21,6 +21,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     string pitchType, hitType;
 
     public AudioClip hitSoundClip, outSoundClip;
+    public AudioClip homeRunAnnounceClip, firstBaseAnnounceClip, secondBaseAnnounceClip, thirdBaseAnnounceClip, missAnnounceClip, outAnnounceClip;
+    public AudioClip strikeAnnounceClip, ballAnnounceClip;
 
     public Material pitcherIconBlue, pitcherIconRed, hitterIconBlue, hitterIconRed, runnerIconBlue, runnerIconRed, catcherIconBlue, catcherIconRed;
 
@@ -252,6 +254,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         if(hiOutcome == "Out") {
             outs = outs + 1;
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(outAnnounceClip);
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
         } else {
@@ -259,23 +263,33 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(firstBaseAnnounceClip);
                 MoveRunners(1);
             } else if (hiOutcome == "Double") {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(secondBaseAnnounceClip);
                 MoveRunners(2);
             } else if (hiOutcome == "Triple") {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(thirdBaseAnnounceClip);
                 MoveRunners(3);
             } else if (hiOutcome == "HomeRun") {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(homeRunAnnounceClip);
                 MoveRunners(4);
             } else if (hiOutcome == "Miss") {
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(missAnnounceClip);
                 strikes = Mathf.Min(strikes + 1, 3);
                 if(strikes == 3) {
                     outs = outs + 1;
@@ -321,8 +335,12 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         if(strikeOrBall) {
             strikes = Mathf.Min(strikes + 1, 3);
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(strikeAnnounceClip);
         } else {
             balls = Mathf.Min(balls + 1, 4);
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(ballAnnounceClip);
         }
         
         if(balls == 4) {
@@ -415,9 +433,10 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         outsInfo = "Strikes: " + strikes + " Balls: " + balls + " Outs: " + outs;
         
-        scoreInfo = "Score for Team A: " + scoreA + " Score for Team B: " + scoreB;
+        scoreInfo = "Team A Score: " + scoreA + " Team B Score: " + scoreB;
         
-        inningInfo = "Inning: " + inning + " Team at bat: " + teamAtBat;
+        inningInfo = "Inning: " + inning + " Team at Bat: " + teamAtBat;
+        finalScore = "";
     }
 
     void EndInning()
@@ -438,12 +457,12 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         if (inning > 3) {
             gameEnded = true;
             prompt = "Game over!";
-            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " (Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ")\n"
-                + "Team B: " + inningScoresB[0] + " (Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ")";
+            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " \n(Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ", Inning 3: " + inningScoresA[3] + ")\n"
+                + "Team B: " + inningScoresB[0] + " \n(Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ", Inning 3: " + inningScoresB[3] + ")";
             List<Sprite> winAnimation = (inningScoresA[0] > inningScoresB[0]) ? winRedAnimation : winBlueAnimation;
             StartImageAnimation(winAnimation);
         } else {
-            prompt  = "End of the inning. Switch sides!";
+            finalScore  = "End of the inning. Switch sides!";
         }
     }
 

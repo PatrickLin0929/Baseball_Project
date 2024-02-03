@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class TwoTeam_ServerLogic : MonoBehaviour
 {
-
     int strikes, balls, outs;
     int scoreA, scoreB;
-    List<int> inningScoresA = new List<int> {0, 0, 0, 0};
-    List<int> inningScoresB = new List<int> {0, 0, 0, 0};
+    List<int> inningScoresA = new List<int> {0, 0, 0, 0, 0, 0, 0};
+    List<int> inningScoresB = new List<int> {0, 0, 0, 0, 0, 0, 0};
+    int totalInning = 6;
     bool onFirst, onSecond, onThird;
     int inning;
     string teamAtBat;
@@ -20,7 +20,10 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo, finalScore;
     string pitchType, hitType;
 
+    public GameObject tryAgainButton, settingsButton;
+
     public AudioClip hitSoundClip, outSoundClip;
+    public AudioClip firstBaseSoundClip, secondBaseSoundClip, thirdBaseSoundClip, gameOverSoundClip;
     public AudioClip homeRunAnnounceClip, firstBaseAnnounceClip, secondBaseAnnounceClip, thirdBaseAnnounceClip, missAnnounceClip, outAnnounceClip;
     public AudioClip strikeAnnounceClip, ballAnnounceClip;
 
@@ -39,11 +42,20 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     List<string> choices = new List<string> { "Miss", "Single", "Double", "Triple", "HomeRun", "Out" };
     // Probabilities for Team A
     //List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
+    /*List<double> probabilitiesTeamAFastball = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };
+    List<double> probabilitiesTeamACurveball = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };
+    List<double> probabilitiesTeamASlider = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };*/
+    
     List<double> probabilitiesTeamAFastball = new List<double> { 0.18, 0.17, 0.14, 0.01, 0.04, 0.46 };
     List<double> probabilitiesTeamACurveball = new List<double> { 0.25, 0.145, 0.15, 0.005, 0.05, 0.4 };
     List<double> probabilitiesTeamASlider = new List<double> { 0.22, 0.156, 0.07, 0.004, 0.01, 0.54 };
+
     // Probabilities for Team B
     //List<double> probabilitiesTeamB = new List<double> { 0.28, 0.15, 0.07, 0.03, 0.47 };
+    /*List<double> probabilitiesTeamBFastball = new List<double> { 0, 0.28, 0.15, 0.07, 0.03, 0.47 };
+    List<double> probabilitiesTeamBCurveball = new List<double> { 0, 0.28, 0.15, 0.07, 0.03, 0.47 };
+    List<double> probabilitiesTeamBSlider = new List<double> { 0, 0.28, 0.15, 0.07, 0.03, 0.47 };*/
+
     List<double> probabilitiesTeamBFastball = new List<double> { 0.15, 0.165, 0.14, 0.015, 0.05, 0.48 };
     List<double> probabilitiesTeamBCurveball = new List<double> { 0.2, 0.1, 0.11, 0.02, 0.05, 0.52 };
     List<double> probabilitiesTeamBSlider = new List<double> { 0.25, 0.14, 0.05, 0.01, 0.03, 0.52 };
@@ -149,6 +161,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
             GameObject.Find("HitButton").GetComponent<Button>().interactable = false;
             GameObject.Find("AutoplayButton").GetComponent<Button>().interactable = false;
+            settingsButton.SetActive(false);
+            tryAgainButton.SetActive(true);
         } else {
             if(pitchThrown) {
                 GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
@@ -170,6 +184,18 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         GameObject.Find("ScoreInfoText").GetComponent<TextMeshProUGUI>().text = scoreInfo;
         GameObject.Find("InningInfoText").GetComponent<TextMeshProUGUI>().text = inningInfo;
         GameObject.Find("FinalScoreText").GetComponent<TextMeshProUGUI>().text = finalScore;
+        if(inning <= totalInning) {
+            GameObject.Find("TeamAScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().text = inningScoresA[inning].ToString();
+            GameObject.Find("TeamBScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().text = inningScoresB[inning].ToString();
+            GameObject.Find("ScoreBoardTextInning"+(inning-1)).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 255, 255);
+            GameObject.Find("TeamAScoreBoardTextInning"+(inning-1)).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 255, 255);
+            GameObject.Find("TeamBScoreBoardTextInning"+(inning-1)).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 255, 255);
+            GameObject.Find("ScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 0, 255);
+            GameObject.Find("TeamAScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 0, 255);
+            GameObject.Find("TeamBScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().color = new Color32(255, 255, 0, 255);
+        }
+        GameObject.Find("TeamAScoreBoardTextInningTotal").GetComponent<TextMeshProUGUI>().text = inningScoresA[0].ToString();
+        GameObject.Find("TeamBScoreBoardTextInningTotal").GetComponent<TextMeshProUGUI>().text = inningScoresB[0].ToString();
     }
 
     // Initialize the variables
@@ -265,6 +291,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 balls = 0;
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(firstBaseAnnounceClip);
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(firstBaseSoundClip);
                 MoveRunners(1);
             } else if (hiOutcome == "Double") {
                 // Reset the strike and ball count after each hit or wait
@@ -272,6 +300,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 balls = 0;
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(secondBaseAnnounceClip);
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(secondBaseSoundClip);
                 MoveRunners(2);
             } else if (hiOutcome == "Triple") {
                 // Reset the strike and ball count after each hit or wait
@@ -279,6 +309,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 balls = 0;
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(thirdBaseAnnounceClip);
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(thirdBaseSoundClip);
                 MoveRunners(3);
             } else if (hiOutcome == "HomeRun") {
                 // Reset the strike and ball count after each hit or wait
@@ -299,6 +331,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 }
             }
         }
+        
+        // Update the text prompt
+        prompt = "The batter hit a " + hiOutcome;
 
         // Check if the inning should end
         if(outs >= 3) {
@@ -306,9 +341,6 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         } else {
             UpdateGameStatus();
         }
-        
-        // Update the text prompt
-        prompt = "The batter hit a " + hiOutcome;
     }
 
     void WaitOutcomeProcessing() 
@@ -352,16 +384,16 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
         }
-        
+    
+        // Update the text prompt
+        prompt = "The batter decided to wait. Balls: " + balls + " Strikes: " + strikes;
+
         // Check if the inning should end
         if(outs >= 3) {
             EndInning();
         } else {
             UpdateGameStatus();
         }
-    
-        // Update the text prompt
-        prompt = "The batter decided to wait. Balls: " + balls + " Strikes: " + strikes;
     }
 
     void MoveRunners(int bases)
@@ -454,13 +486,18 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         // prompt = "End of the inning. Switch sides!";
 
         // Check if the game should end after the second inning
-        if (inning > 3) {
+        if (inning > totalInning) {
             gameEnded = true;
-            prompt = "Game over!";
-            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " \n(Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ", Inning 3: " + inningScoresA[3] + ")\n"
-                + "Team B: " + inningScoresB[0] + " \n(Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ", Inning 3: " + inningScoresB[3] + ")";
+            UpdateButtonGUI();
+            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " \n(Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ", Inning 3: " + inningScoresA[3] 
+                                                                        + ", Inning 4: " + inningScoresA[4] + ", Inning 5: " + inningScoresA[5] + ", Inning 6: " + inningScoresA[6] + ")\n"
+                + "Team B: " + inningScoresB[0] + " \n(Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ", Inning 3: " + inningScoresB[3] 
+                + ", Inning 4: " + inningScoresB[4] + ", Inning 5: " + inningScoresB[5] + ", Inning 6: " + inningScoresB[6] + ")";
             List<Sprite> winAnimation = (inningScoresA[0] > inningScoresB[0]) ? winRedAnimation : winBlueAnimation;
             StartImageAnimation(winAnimation);
+            prompt = "Game over!";
+            GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+            GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(gameOverSoundClip);
         } else {
             finalScore  = "End of the inning. Switch sides!";
         }

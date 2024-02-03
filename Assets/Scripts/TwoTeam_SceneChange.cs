@@ -27,4 +27,9 @@ public class TwoTeamSceneChange : MonoBehaviour
         SceneManager.LoadSceneAsync("TwoTeamsOpening");
     }
 
+    public void TryAgainButtonPressed()
+    {
+        SceneManager.LoadSceneAsync("TwoTeams");
+    }
+
 }

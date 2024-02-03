@@ -26,7 +26,7 @@ public class TwoTeam_AutoServerLogic : MonoBehaviour
     void OnToggleValueChanged(bool isOn)
     {
         startTesting = isOn;
-        autoCanvas.enabled = false;
+        //autoCanvas.enabled = false;
 
         // You can add additional logic here if needed.
     }
@@ -51,7 +51,7 @@ public class TwoTeam_AutoServerLogic : MonoBehaviour
     private void PressButton()
     {
         // Check if the button is interactable before simulating a click.
-        if (buttonToPress != null && buttonToPress.interactable && startTesting)
+        if (buttonToPress != null && buttonToPress.interactable && startTesting && !autoCanvas.enabled)
         {
             buttonToPress.onClick.Invoke(); // Simulate a button click.
         }

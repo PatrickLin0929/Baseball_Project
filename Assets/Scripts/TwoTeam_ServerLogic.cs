@@ -280,6 +280,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         if(hiOutcome == "Out") {
             outs = outs + 1;
+            strikes = 0;
+            balls = 0;
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(outAnnounceClip);
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
@@ -326,6 +328,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 if(strikes == 3) {
                     outs = outs + 1;
                     strikes = 0;  // Reset strikes count after a strikeout
+                    balls = 0;
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
                 }

@@ -489,7 +489,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         // prompt = "End of the inning. Switch sides!";
 
         // Check if the game should end after the second inning
-        if (inning > totalInning) {
+        // The game should also end when the changing side to team B is the last one and team B is ahead of team A
+        if ((inning > totalInning) || ((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
             gameEnded = true;
             UpdateButtonGUI();
             finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " \n(Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ", Inning 3: " + inningScoresA[3] 
@@ -501,6 +502,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             prompt = "Game over!";
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(gameOverSoundClip);
+            if (((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
+                prompt = "Game over! Decided in top half.";
+            }
         } else {
             finalScore  = "End of the inning. Switch sides!";
         }

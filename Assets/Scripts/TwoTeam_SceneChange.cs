@@ -19,7 +19,7 @@ public class TwoTeamSceneChange : MonoBehaviour
 
     public void StartButtonPressed()
     {
-        SceneManager.LoadSceneAsync("TwoTeams");
+        SceneManager.LoadSceneAsync("TwoTeams_PlayerSelect");
     }
 
     public void BackButtonPressed()

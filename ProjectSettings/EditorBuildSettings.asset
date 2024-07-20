@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/TwoTeamsOpening.unity
     guid: 497d367c1b75e4c7a9e32d574d7ebc76
   - enabled: 1
+    path: Assets/Scenes/TwoTeams_PlayerSelect.unity
+    guid: 7f466cf36c5254a139a7c106289c46a0
+  - enabled: 1
+    path: Assets/Scenes/TwoTeams_PlayerOrdering.unity
+    guid: 87f174c8b51a24b0aae091c7d897c39f
+  - enabled: 1
     path: Assets/Scenes/TwoTeams.unity
     guid: 2b6951d11404d4b83ad2df44060f9583
   m_configObjects: {}

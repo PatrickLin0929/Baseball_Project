@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
+using System;
 
 public class TwoTeam_ServerLogic : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     List<int> inningScoresA = new List<int> {0, 0, 0, 0, 0, 0, 0};
     List<int> inningScoresB = new List<int> {0, 0, 0, 0, 0, 0, 0};
     int totalInning = 6;
+    int teamMaxPlayer = 9;
     bool onFirst, onSecond, onThird;
     int inning;
     string teamAtBat;
@@ -18,6 +20,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     bool gameEnded;
     string hiOutcome;
     string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo, finalScore;
+    string playerStatusPrompt;
     string pitchType, hitType;
 
     public GameObject tryAgainButton, settingsButton;
@@ -29,17 +32,21 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     public Material pitcherIconBlue, pitcherIconRed, hitterIconBlue, hitterIconRed, runnerIconBlue, runnerIconRed, catcherIconBlue, catcherIconRed;
 
-    public Image imageToAnimate;
+    public Image imageToAnimate, teamACurrentPlayerImage, teamBCurrentPlayerImage;
+    public GameObject teamACurPlayerObj, teamBCurPlayerObj, teamACurPitcherObj, teamBCurPitcherObj;
     float frameRate = 5.0f;    // Frames per second.
     int currentFrame = 0;     // Index of the current frame.
     // float timer = 0.0f;       // Timer to control frame rate.
-    public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation;
+    public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation, playerSpriteList;
     List<Sprite> frames;
     bool strikeOrBall; // 1 = Strike, 0 = Ball
+    int teamAPlayerListIndex, teamBPlayerListIndex;
+    string teamACurrentPlayer, teamBCurrentPlayer;
+    static System.Random rnd = new System.Random();
 
     // "Miss", "Single", "Double", "Triple", "HomeRun", "Out" 
 
-    List<string> choices = new List<string> { "Miss", "Single", "Double", "Triple", "HomeRun", "Out" };
+    List<string> choices = new List<string> { "揮棒落空", "一壘安打", "二壘安打", "三壘安打", "全壘打", "接殺" };
     // Probabilities for Team A
     //List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
     /*List<double> probabilitiesTeamAFastball = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };
@@ -63,6 +70,10 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     List<float> probabilitiesWaitTeamA = new List<float> { 0.7f, 0.4f, 0.5f }; // Fastball, Curveball, Slider
     List<float> probabilitiesWaitTeamB = new List<float> { 0.7f, 0.37f, 0.5f }; // Fastball, Curveball, Slider
 
+    List<string> pitcherTypeList = new List<string> { "快速球", "曲球", "滑球"};
+    List<string> hitterTypeList = new List<string> { "揮棒", "等待"};
+
+    public TMP_Dropdown pitchDropdown, hitDropdown;
 
     static string SelectChoiceWithProbability(List<string> choices, List<double> probabilities)
     {
@@ -178,12 +189,15 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     {
         GameObject.Find("TeamAScore").GetComponent<TextMeshProUGUI>().text = scoreA.ToString();
         GameObject.Find("TeamBScore").GetComponent<TextMeshProUGUI>().text = scoreB.ToString();
+        teamACurPlayerObj.GetComponent<TextMeshProUGUI>().text = teamACurrentPlayer;
+        teamBCurPlayerObj.GetComponent<TextMeshProUGUI>().text = teamBCurrentPlayer;
         GameObject.Find("PromptText").GetComponent<TextMeshProUGUI>().text = prompt;
         GameObject.Find("OnBaseInfoText").GetComponent<TextMeshProUGUI>().text = onBaseInfo;
         GameObject.Find("OutsInfoText").GetComponent<TextMeshProUGUI>().text = outsInfo;
         GameObject.Find("ScoreInfoText").GetComponent<TextMeshProUGUI>().text = scoreInfo;
         GameObject.Find("InningInfoText").GetComponent<TextMeshProUGUI>().text = inningInfo;
         GameObject.Find("FinalScoreText").GetComponent<TextMeshProUGUI>().text = finalScore;
+        //GameObject.Find("PlayerStatusText").GetComponent<TextMeshProUGUI>().text = playerStatusPrompt;
         if(inning <= totalInning) {
             GameObject.Find("TeamAScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().text = inningScoresA[inning].ToString();
             GameObject.Find("TeamBScoreBoardTextInning"+inning).GetComponent<TextMeshProUGUI>().text = inningScoresB[inning].ToString();
@@ -216,6 +230,11 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         teamAtBat = "A";
 
+        teamACurPlayerObj.SetActive(true);
+        teamACurPitcherObj.SetActive(false);
+        teamBCurPlayerObj.SetActive(false);
+        teamBCurPitcherObj.SetActive(true);
+
         pitchThrown = false;
         gameEnded = false;
 
@@ -227,11 +246,20 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         scoreInfo = "";
         inningInfo = "";
         finalScore= "";
+        playerStatusPrompt = "";
 
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
 
         strikeOrBall = false;
+        teamAPlayerListIndex = 0;
+        teamBPlayerListIndex = 0;
+
+        teamACurrentPlayer = TwoTeam_SharedData.playerList[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+        teamBCurrentPlayer = TwoTeam_SharedData.playerList[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+        teamACurrentPlayerImage.sprite = playerSpriteList[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+        teamBCurrentPlayerImage.sprite = playerSpriteList[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+
     }
 
     public void PitchButtonPressed()
@@ -240,35 +268,35 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         StartImageAnimation(pitcherAnimation);
         pitchThrown = true;
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
-        prompt = "The pitch was thrown. It's time to decide: Hit or Wait?";
+        prompt = "投手已經投球。請做出選擇：「揮棒」或「等待」？";
     }
 
     public void HitButtonPressed()
     {
         pitchThrown = false;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
-        if(hitType == "Swing") {
+        if(hitType == hitterTypeList[0]) {
             List<Sprite> hitterAnimation = (teamAtBat == "A") ? hitterRedAnimation : hitterBlueAnimation;
             StartImageAnimation(hitterAnimation);
         }
         if(teamAtBat == "A") {
-            if(pitchType == "Fastball") {
+            if(pitchType == pitcherTypeList[0]) {
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamAFastball);
-            } else if(pitchType == "Curveball") {
+            } else if(pitchType == pitcherTypeList[1]) {
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamACurveball);
-            } else if(pitchType == "Slider") { 
+            } else if(pitchType == pitcherTypeList[2]) { 
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamASlider);
             }
         } else {
-            if(pitchType == "Fastball") {
+            if(pitchType == pitcherTypeList[0]) {
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBFastball);
-            } else if(pitchType == "Curveball") {
+            } else if(pitchType == pitcherTypeList[1]) {
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBCurveball);
-            } else if(pitchType == "Slider") { 
+            } else if(pitchType == pitcherTypeList[2]) { 
                 hiOutcome = SelectChoiceWithProbability(choices, probabilitiesTeamBSlider);
             }
         }
-        if(hitType == "Swing") {
+        if(hitType == hitterTypeList[0]) {
             HitOutcomeProcessing();
         } else {
             WaitOutcomeProcessing();
@@ -278,16 +306,17 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     void HitOutcomeProcessing()
     {
 
-        if(hiOutcome == "Out") {
+        if(hiOutcome == choices[5]/*Out*/) {
             outs = outs + 1;
             strikes = 0;
             balls = 0;
+            changePlayer();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(outAnnounceClip);
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
         } else {
-            if (hiOutcome == "Single") {
+            if (hiOutcome == choices[1]/*Single*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -296,7 +325,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(firstBaseSoundClip);
                 MoveRunners(1);
-            } else if (hiOutcome == "Double") {
+            } else if (hiOutcome == choices[2]/*Double*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -305,7 +334,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(secondBaseSoundClip);
                 MoveRunners(2);
-            } else if (hiOutcome == "Triple") {
+            } else if (hiOutcome == choices[3]/*Triple*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -314,14 +343,14 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(thirdBaseSoundClip);
                 MoveRunners(3);
-            } else if (hiOutcome == "HomeRun") {
+            } else if (hiOutcome == choices[4]/*HomeRun*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(homeRunAnnounceClip);
                 MoveRunners(4);
-            } else if (hiOutcome == "Miss") {
+            } else if (hiOutcome == choices[0]/*Miss*/) {
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(missAnnounceClip);
                 strikes = Mathf.Min(strikes + 1, 3);
@@ -329,6 +358,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                     outs = outs + 1;
                     strikes = 0;  // Reset strikes count after a strikeout
                     balls = 0;
+                    changePlayer();
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
                 }
@@ -336,7 +366,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         }
         
         // Update the text prompt
-        prompt = "The batter hit a " + hiOutcome;
+        prompt = "打者擊出了一個「" + hiOutcome + "」。";
 
         // Check if the inning should end
         if(outs >= 3) {
@@ -350,20 +380,20 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     {
         if(teamAtBat == "A") {
             // Adjust the strikes and balls based on pitch type for Team A
-            if(pitchType == "Fastball") {
+            if(pitchType == pitcherTypeList[0]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[0]) ? true : false;
-            } else if(pitchType == "Curveball") {
+            } else if(pitchType == pitcherTypeList[1]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[1]) ? true : false;
-            } else if(pitchType == "Slider") {
+            } else if(pitchType == pitcherTypeList[2]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamA[2]) ? true : false;
             }
         } else {
             // Adjust the strikes and balls based on pitch type for Team B
-            if(pitchType == "Fastball") {
+            if(pitchType == pitcherTypeList[0]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[0]) ? true : false;
-            } else if(pitchType == "Curveball") {
+            } else if(pitchType == pitcherTypeList[1]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[1]) ? true : false;
-            } else if(pitchType == "Slider") {
+            } else if(pitchType == pitcherTypeList[2]) {
                 strikeOrBall = (UnityEngine.Random.value < probabilitiesWaitTeamB[2]) ? true : false;
             }
         }
@@ -384,12 +414,13 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         } else if(strikes == 3) {
             outs = outs + 1;
             strikes = 0;  // Reset strikes count after a strikeout
+            changePlayer();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
         }
     
         // Update the text prompt
-        prompt = "The batter decided to wait. Balls: " + balls + " Strikes: " + strikes;
+        prompt = "打者決定等待不揮棒。好球數: " + strikes + " 壞球數: " + balls;
 
         // Check if the inning should end
         if(outs >= 3) {
@@ -444,34 +475,37 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         }
         // Clear the bases after scoring
         onThird = false;
+        changePlayer();
     }
 
     void UpdateGameStatus() {
-        onBaseInfo = "Runners on base - \nFirst: ";
+        onBaseInfo = "上壘情況 - \n一壘: ";
         if (onFirst) {
-            onBaseInfo = onBaseInfo + "Yes";
+            onBaseInfo = onBaseInfo + "有";
         } else {
-            onBaseInfo = onBaseInfo + "No";
+            onBaseInfo = onBaseInfo + "無";
         }
-        onBaseInfo = onBaseInfo + " Second: ";
+        onBaseInfo = onBaseInfo + " 二壘: ";
         if (onSecond) {
-            onBaseInfo = onBaseInfo + "Yes";
+            onBaseInfo = onBaseInfo + "有";
         } else {
-            onBaseInfo = onBaseInfo + "No";
+            onBaseInfo = onBaseInfo + "無";
         }
-        onBaseInfo = onBaseInfo + " Third: ";
+        onBaseInfo = onBaseInfo + " 三壘: ";
         if (onThird) {
-            onBaseInfo = onBaseInfo + "Yes";
+            onBaseInfo = onBaseInfo + "有";
         } else {
-            onBaseInfo = onBaseInfo + "No";
+            onBaseInfo = onBaseInfo + "無";
         }
 
-        outsInfo = "Strikes: " + strikes + " Balls: " + balls + " Outs: " + outs;
+        outsInfo = "好球數: " + strikes + " 壞球數: " + balls + " 出局人數: " + outs;
         
-        scoreInfo = "Team A Score: " + scoreA + " Team B Score: " + scoreB;
-        
-        inningInfo = "Inning: " + inning + " Team at Bat: " + teamAtBat;
+        scoreInfo = "紅隊得分: " + scoreA + " 藍隊得分: " + scoreB;
+        string teamNameAtBat = (teamAtBat == "A") ? "紅隊" : "藍隊";
+        inningInfo = "局數: " + inning + " 進攻方: " + teamNameAtBat;
         finalScore = "";
+        //playerStatusPrompt = "Team A: Index - " + teamAPlayerListIndex + " ID -  " + TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex] + " Matrix - " + string.Join(", ", probabilitiesTeamAFastball) + " >< " + string.Join(", ", probabilitiesTeamACurveball) + " >< " + string.Join(", ", probabilitiesTeamASlider)
+        //                    + "\n" + "Team B: Index - " + teamBPlayerListIndex + " ID -  " + TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex] + " Matrix - " + string.Join(", ", probabilitiesTeamBFastball) + " >< " + string.Join(", ", probabilitiesTeamBCurveball) + " >< " + string.Join(", ", probabilitiesTeamBSlider);
     }
 
     void EndInning()
@@ -493,27 +527,62 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         if ((inning > totalInning) || ((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
             gameEnded = true;
             UpdateButtonGUI();
-            finalScore = "Final Scores:\n" + "Team A: " + inningScoresA[0] + " \n(Inning 1: " + inningScoresA[1] + ", Inning 2: " + inningScoresA[2] + ", Inning 3: " + inningScoresA[3] 
-                                                                        + ", Inning 4: " + inningScoresA[4] + ", Inning 5: " + inningScoresA[5] + ", Inning 6: " + inningScoresA[6] + ")\n"
-                + "Team B: " + inningScoresB[0] + " \n(Inning 1: " + inningScoresB[1] + ", Inning 2: " + inningScoresB[2] + ", Inning 3: " + inningScoresB[3] 
-                + ", Inning 4: " + inningScoresB[4] + ", Inning 5: " + inningScoresB[5] + ", Inning 6: " + inningScoresB[6] + ")";
+            finalScore = "最終得分:\n" + "紅隊: " + inningScoresA[0] + " \n(第1局: " + inningScoresA[1] + ", 第2局: " + inningScoresA[2] + ", 第3局: " + inningScoresA[3] 
+                                                                        + ", 第4局: " + inningScoresA[4] + ", 第5局: " + inningScoresA[5] + ", 第6局: " + inningScoresA[6] + ")\n"
+                + "籃隊: " + inningScoresB[0] + " \n(第1局: " + inningScoresB[1] + ", 第2局: " + inningScoresB[2] + ", 第3局: " + inningScoresB[3] 
+                + ", 第4局: " + inningScoresB[4] + ", 第5局: " + inningScoresB[5] + ", 第6局: " + inningScoresB[6] + ")";
             List<Sprite> winAnimation = (inningScoresA[0] > inningScoresB[0]) ? winRedAnimation : winBlueAnimation;
             StartImageAnimation(winAnimation);
-            prompt = "Game over!";
+            prompt = "比賽結束！";
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(gameOverSoundClip);
             if (((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
-                prompt = "Game over! Decided in top half.";
+                prompt = "比賽結束！上半局結果已定。";
             }
         } else {
-            finalScore  = "End of the inning. Switch sides!";
+            finalScore  = "這局結束，攻守交換。";
+            if (teamAtBat == "A") {
+                teamACurPlayerObj.SetActive(true);
+                teamACurPitcherObj.SetActive(false);
+                teamBCurPlayerObj.SetActive(false);
+                teamBCurPitcherObj.SetActive(true);
+            } else {
+                teamACurPlayerObj.SetActive(false);
+                teamACurPitcherObj.SetActive(true);
+                teamBCurPlayerObj.SetActive(true);
+                teamBCurPitcherObj.SetActive(false);
+            }
+        }
+    }
+
+    void changePlayer() {
+        if(teamAtBat == "A") {
+            teamAPlayerListIndex = (teamAPlayerListIndex + 1 ) % teamMaxPlayer;
+            probabilitiesTeamAFastball = TwoTeam_SharedData.playerMatrix_Fastball[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+            probabilitiesTeamACurveball = TwoTeam_SharedData.playerMatrix_Curveball[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+            probabilitiesTeamASlider = TwoTeam_SharedData.playerMatrix_Slider[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+            teamACurrentPlayer = TwoTeam_SharedData.playerList[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+            teamACurrentPlayerImage.sprite = playerSpriteList[TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex]];
+        } else {
+            teamBPlayerListIndex = (teamBPlayerListIndex + 1 ) % teamMaxPlayer;
+            probabilitiesTeamBFastball = TwoTeam_SharedData.playerMatrix_Fastball[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+            probabilitiesTeamBCurveball = TwoTeam_SharedData.playerMatrix_Curveball[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+            probabilitiesTeamBSlider = TwoTeam_SharedData.playerMatrix_Slider[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+            teamBCurrentPlayer = TwoTeam_SharedData.playerList[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
+            teamBCurrentPlayerImage.sprite = playerSpriteList[TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex]];
         }
     }
 
     public void AutoCompletePressed() {
         if(pitchThrown) {
+            int rnd_val = rnd.Next(hitterTypeList.Count);
+            //Dropdown m_Dropdown = GameObject.Find("HitDropdown").GetComponent<Dropdown>();
+            hitDropdown.value = rnd_val;
             HitButtonPressed();
         } else {
+            int rnd_val = rnd.Next(pitcherTypeList.Count);
+            //Dropdown m_Dropdown = GameObject.Find("PitchDropdown").GetComponent<Dropdown>();
+            pitchDropdown.value = rnd_val;
             PitchButtonPressed();
         }
     }

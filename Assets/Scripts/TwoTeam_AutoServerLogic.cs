@@ -7,25 +7,32 @@ public class TwoTeam_AutoServerLogic : MonoBehaviour
 {
     public Button buttonToPress; // Reference to the button you want to press automatically.
     public Slider sliderProcessSpeed;
-    public Toggle toggle; // Reference to the Toggle component.
+    public Toggle autoRunToggle; // Reference to the Toggle component.
+    public Toggle dynamicViewToggle; // Reference to the Toggle component.
     public float pressInterval = 1.0f; // Time interval between button presses (1 second in this case).
 
-    public bool startTesting = false;
+    //public bool startTesting = false;
 
     public Canvas autoCanvas;
 
     void Start()
     {
         autoCanvas.enabled = false;
-        toggle.onValueChanged.AddListener(OnToggleValueChanged);
+        autoRunToggle.onValueChanged.AddListener(OnAutoRunToggleValueChanged);
+        dynamicViewToggle.onValueChanged.AddListener(OnDynamicViewToggleValueChanged);
         // Start invoking the method to press the button automatically.
         InvokeRepeating("PressButton", 0.0f, pressInterval);
         
     }
 
-    void OnToggleValueChanged(bool isOn)
+    void OnDynamicViewToggleValueChanged(bool isOn)
     {
-        startTesting = isOn;
+        TwoTeam_SharedData.dynamicViewPoint = isOn;
+    }
+
+    void OnAutoRunToggleValueChanged(bool isOn)
+    {
+        TwoTeam_SharedData.startTesting = isOn;
         //autoCanvas.enabled = false;
 
         // You can add additional logic here if needed.
@@ -51,7 +58,7 @@ public class TwoTeam_AutoServerLogic : MonoBehaviour
     private void PressButton()
     {
         // Check if the button is interactable before simulating a click.
-        if (buttonToPress != null && buttonToPress.interactable && startTesting && !autoCanvas.enabled)
+        if (buttonToPress != null && buttonToPress.interactable && TwoTeam_SharedData.startTesting && !autoCanvas.enabled)
         {
             buttonToPress.onClick.Invoke(); // Simulate a button click.
         }

@@ -16,7 +16,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     bool onFirst, onSecond, onThird;
     int inning;
     string teamAtBat;
-    bool pitchThrown;
+    //bool pitchThrown;
     bool gameEnded;
     string hiOutcome;
     string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo, finalScore;
@@ -33,12 +33,16 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     public Material pitcherIconBlue, pitcherIconRed, hitterIconBlue, hitterIconRed, runnerIconBlue, runnerIconRed, catcherIconBlue, catcherIconRed;
 
     public Image imageToAnimate, teamACurrentPlayerImage, teamBCurrentPlayerImage;
+    GameObject planeToAnimate;
     public GameObject teamACurPlayerObj, teamBCurPlayerObj, teamACurPitcherObj, teamBCurPitcherObj;
     float frameRate = 5.0f;    // Frames per second.
+    float imageFrameRate = 10.0f;
     int currentFrame = 0;     // Index of the current frame.
     // float timer = 0.0f;       // Timer to control frame rate.
     public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation, playerSpriteList;
+    public List<Material> pitcherBluePlaneAnimation, pitcherRedPlaneAnimation, hitterBluePlaneAnimation, hitterRedPlaneAnimation;
     List<Sprite> frames;
+    List<Material> planeFrames;
     bool strikeOrBall; // 1 = Strike, 0 = Ball
     int teamAPlayerListIndex, teamBPlayerListIndex;
     string teamACurrentPlayer, teamBCurrentPlayer;
@@ -119,15 +123,41 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         StartCoroutine(AnimateImage());
     }
 
+    void StartPlaneAnimation(List<Material> animation)
+    {
+        planeFrames = animation;
+        currentFrame = 0;
+        // timer = 0.0f;
+        MeshRenderer myRend = planeToAnimate.GetComponent<MeshRenderer> ();
+        myRend.material = animation[currentFrame];
+        //planeToAnimate.GetComponent<MeshRenderer> () = myRend;
+        StartCoroutine(AnimatePlaneMaterial());
+    }
+
     private IEnumerator AnimateImage()
     {
         while (currentFrame < frames.Count)
         {
-            yield return new WaitForSeconds(1.0f / frameRate);
+            yield return new WaitForSeconds(1.0f / imageFrameRate);
             currentFrame++;
             if (currentFrame < frames.Count)
             {
                 imageToAnimate.sprite = frames[currentFrame];
+            }
+        }
+    }
+
+    private IEnumerator AnimatePlaneMaterial()
+    {
+        while (currentFrame < planeFrames.Count)
+        {
+            yield return new WaitForSeconds(1.0f / frameRate);
+            currentFrame++;
+            if (currentFrame < planeFrames.Count)
+            {
+                MeshRenderer myRend = planeToAnimate.GetComponent<MeshRenderer> ();
+                myRend.material = planeFrames[currentFrame];
+                //planeToAnimate.GetComponent<MeshRenderer> () = myRend;
             }
         }
     }
@@ -160,8 +190,8 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         GameObject.Find("PlaneSecond").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
         GameObject.Find("PlaneThird").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
 
-        GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
-        GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
+        //GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
+        //GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
 
         GameObject.Find("PlaneCatcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? catcherIconBlue : catcherIconRed;
     }
@@ -175,7 +205,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             settingsButton.SetActive(false);
             tryAgainButton.SetActive(true);
         } else {
-            if(pitchThrown) {
+            if(TwoTeam_SharedData.pitchThrown) {
                 GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
                 GameObject.Find("HitButton").GetComponent<Button>().interactable = true;
             } else {
@@ -235,7 +265,10 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         teamBCurPlayerObj.SetActive(false);
         teamBCurPitcherObj.SetActive(true);
 
-        pitchThrown = false;
+        TwoTeam_SharedData.pitchThrown = false;
+        TwoTeam_SharedData.dynamicViewPoint = false;
+        TwoTeam_SharedData.startTesting = false;
+
         gameEnded = false;
 
         hiOutcome = "";
@@ -265,19 +298,32 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     public void PitchButtonPressed()
     {
         List<Sprite> pitcherAnimation = (teamAtBat == "A") ? pitcherBlueAnimation : pitcherRedAnimation;
-        StartImageAnimation(pitcherAnimation);
-        pitchThrown = true;
+        List<Material> pitcherPlaneAnimation = (teamAtBat == "A") ? pitcherBluePlaneAnimation : pitcherRedPlaneAnimation;
+
+        GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
+        GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
+        //StartImageAnimation(pitcherAnimation);
+        planeToAnimate = GameObject.Find("PlanePitcher");
+        StartPlaneAnimation(pitcherPlaneAnimation);
+
+        TwoTeam_SharedData.pitchThrown = true;
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         prompt = "投手已經投球。請做出選擇：「揮棒」或「等待」？";
     }
 
     public void HitButtonPressed()
     {
-        pitchThrown = false;
+        TwoTeam_SharedData.pitchThrown = false;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
         if(hitType == hitterTypeList[0]) {
             List<Sprite> hitterAnimation = (teamAtBat == "A") ? hitterRedAnimation : hitterBlueAnimation;
-            StartImageAnimation(hitterAnimation);
+            List<Material> hitterPlaneAnimation = (teamAtBat == "A") ? hitterRedPlaneAnimation : hitterBluePlaneAnimation;
+
+            GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
+            GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
+            planeToAnimate = GameObject.Find("PlaneHitter");
+            //StartImageAnimation(hitterAnimation);
+            StartPlaneAnimation(hitterPlaneAnimation);
         }
         if(teamAtBat == "A") {
             if(pitchType == pitcherTypeList[0]) {
@@ -574,7 +620,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     }
 
     public void AutoCompletePressed() {
-        if(pitchThrown) {
+        if(TwoTeam_SharedData.pitchThrown) {
             int rnd_val = rnd.Next(hitterTypeList.Count);
             //Dropdown m_Dropdown = GameObject.Find("HitDropdown").GetComponent<Dropdown>();
             hitDropdown.value = rnd_val;

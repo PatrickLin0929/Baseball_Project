@@ -45,7 +45,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
                 GameObject.Find("ConfirmButton").GetComponent<Button>().interactable = true;
                 GameObject.Find("ShowInfoButton").GetComponent<Button>().interactable = true;
             } else {
-                selectedTitle = "選擇兩個隊伍各自隊伍的球員";
+                selectedTitle = "請選擇各自隊伍的球員";
                 prompt = "";
                 GameObject.Find("ConfirmButton").GetComponent<Button>().interactable = false;
                 GameObject.Find("ShowInfoButton").GetComponent<Button>().interactable = false;
@@ -58,6 +58,21 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
     public void GoOrderingButtonPressed()
     {
         SceneManager.LoadSceneAsync("TwoTeams_PlayerOrdering");
+    }
+
+    public void ClickButtonSound()
+    {
+        GameObject.Find("ButtonClickAudioSource").GetComponent<AudioSource>().Play();
+    }
+
+    public void SelectButtonSound()
+    {
+        GameObject.Find("ButtonSelectAudioSource").GetComponent<AudioSource>().Play();
+    }
+
+    public void StartButtonSound()
+    {
+        GameObject.Find("ButtonStartAudioSource").GetComponent<AudioSource>().Play();
     }
 
     public void ConfirmButtonPressed()
@@ -173,7 +188,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
         hadSelectedPlayers = 0;
         selectedPlayerButtonName = "";
         prompt = "";
-        selectedTitle = "選擇兩個隊伍各自隊伍的球員";
+        selectedTitle = "請選擇各自隊伍的球員";
         
         for(int i = 0;i<PlayerButtonObject.Count;i++)
         {

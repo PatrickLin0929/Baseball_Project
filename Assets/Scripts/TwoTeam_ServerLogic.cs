@@ -29,6 +29,13 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     public AudioClip firstBaseSoundClip, secondBaseSoundClip, thirdBaseSoundClip, gameOverSoundClip;
     public AudioClip homeRunAnnounceClip, firstBaseAnnounceClip, secondBaseAnnounceClip, thirdBaseAnnounceClip, missAnnounceClip, outAnnounceClip;
     public AudioClip strikeAnnounceClip, ballAnnounceClip;
+    public AudioClip inning_1_1_AnnounceClip, inning_1_2_AnnounceClip, inning_2_1_AnnounceClip, inning_2_2_AnnounceClip,
+                     inning_3_1_AnnounceClip, inning_3_2_AnnounceClip, inning_4_1_AnnounceClip, inning_4_2_AnnounceClip,
+                     inning_5_1_AnnounceClip, inning_5_2_AnnounceClip, inning_6_1_AnnounceClip, inning_6_2_AnnounceClip;
+
+    public AudioClip blueWinAnnounceClip, redWinAnnounceClip;
+
+    AudioClip audioSourceTTSClip, audioSourceTTSClip2;
 
     public Material pitcherIconBlue, pitcherIconRed, hitterIconBlue, hitterIconRed, runnerIconBlue, runnerIconRed, catcherIconBlue, catcherIconRed;
 
@@ -104,6 +111,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     void Start()
     {
         InitializeValues();
+        PlayOneShotSwitchInningAnnounce();
     }
 
     // Update is called once per frame
@@ -204,6 +212,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             GameObject.Find("AutoplayButton").GetComponent<Button>().interactable = false;
             settingsButton.SetActive(false);
             tryAgainButton.SetActive(true);
+            //exitButton.SetActive(true);
         } else {
             if(TwoTeam_SharedData.pitchThrown) {
                 GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
@@ -308,6 +317,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         TwoTeam_SharedData.pitchThrown = true;
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
+        GameObject.Find("ButtonPitcherAudioSource").GetComponent<AudioSource>().Play();
         prompt = "投手已經投球。請做出選擇：「揮棒」或「等待」？";
     }
 
@@ -353,52 +363,80 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     {
 
         if(hiOutcome == choices[5]/*Out*/) {
+            // Reset the strike and ball count after each hit or wait
             outs = outs + 1;
             strikes = 0;
             balls = 0;
             changePlayer();
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(outAnnounceClip);
+            audioSourceTTSClip = outAnnounceClip;
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
+            // Update the text prompt
+            prompt = "打者已揮棒，但被「" + hiOutcome + "」。";
+            GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
         } else {
             if (hiOutcome == choices[1]/*Single*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(firstBaseAnnounceClip);
+                audioSourceTTSClip = firstBaseAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(firstBaseSoundClip);
                 MoveRunners(1);
+                // Update the text prompt
+                prompt = "打者擊出了一個「" + hiOutcome + "」。";
+                GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
             } else if (hiOutcome == choices[2]/*Double*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(secondBaseAnnounceClip);
+                audioSourceTTSClip = secondBaseAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(secondBaseSoundClip);
                 MoveRunners(2);
+                // Update the text prompt
+                prompt = "打者擊出了一個「" + hiOutcome + "」。";
+                GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
             } else if (hiOutcome == choices[3]/*Triple*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(thirdBaseAnnounceClip);
+                audioSourceTTSClip = thirdBaseAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(thirdBaseSoundClip);
                 MoveRunners(3);
+                // Update the text prompt
+                prompt = "打者擊出了一個「" + hiOutcome + "」。";
+                GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
             } else if (hiOutcome == choices[4]/*HomeRun*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(homeRunAnnounceClip);
+                audioSourceTTSClip = homeRunAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 MoveRunners(4);
+                // Update the text prompt
+                prompt = "打者擊出了一個「" + hiOutcome + "」！";
+                GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
             } else if (hiOutcome == choices[0]/*Miss*/) {
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(missAnnounceClip);
+                audioSourceTTSClip = missAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 strikes = Mathf.Min(strikes + 1, 3);
                 if(strikes == 3) {
                     outs = outs + 1;
@@ -408,16 +446,18 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                     GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
                 }
+                // Update the text prompt
+                prompt = "打者已揮棒，但「" + hiOutcome + "」。";
             }
         }
-        
-        // Update the text prompt
-        prompt = "打者擊出了一個「" + hiOutcome + "」。";
 
         // Check if the inning should end
         if(outs >= 3) {
             EndInning();
         } else {
+            finalScore = "";
+        }
+        if (!gameEnded) {
             UpdateGameStatus();
         }
     }
@@ -446,19 +486,25 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         if(strikeOrBall) {
             strikes = Mathf.Min(strikes + 1, 3);
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(strikeAnnounceClip);
+            audioSourceTTSClip = strikeAnnounceClip;
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
         } else {
             balls = Mathf.Min(balls + 1, 4);
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
-            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(ballAnnounceClip);
+            audioSourceTTSClip = ballAnnounceClip;
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
         }
         
         if(balls == 4) {
             MoveRunners(1);
             balls = 0;  // Reset balls count after a walk
+            strikes = 0;  // Reset strikes count after a strikeout
         } else if(strikes == 3) {
             outs = outs + 1;
+            balls = 0;  // Reset balls count after a walk
             strikes = 0;  // Reset strikes count after a strikeout
             changePlayer();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
@@ -466,12 +512,16 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         }
     
         // Update the text prompt
-        prompt = "打者決定等待不揮棒。好球數: " + strikes + " 壞球數: " + balls;
+        string waitBallPrompt = strikeOrBall ? "好球" : "壞球";
+        prompt = "打者決定不揮棒，這球是「" + waitBallPrompt + "」。好球數: " + strikes + "，壞球數: " + balls;
 
         // Check if the inning should end
         if(outs >= 3) {
             EndInning();
         } else {
+            finalScore = "";
+        }
+        if (!gameEnded) {
             UpdateGameStatus();
         }
     }
@@ -549,7 +599,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         scoreInfo = "紅隊得分: " + scoreA + " 藍隊得分: " + scoreB;
         string teamNameAtBat = (teamAtBat == "A") ? "紅隊" : "藍隊";
         inningInfo = "局數: " + inning + " 進攻方: " + teamNameAtBat;
-        finalScore = "";
+
         //playerStatusPrompt = "Team A: Index - " + teamAPlayerListIndex + " ID -  " + TwoTeam_SharedData.teamAPlayerOrderedList[teamAPlayerListIndex] + " Matrix - " + string.Join(", ", probabilitiesTeamAFastball) + " >< " + string.Join(", ", probabilitiesTeamACurveball) + " >< " + string.Join(", ", probabilitiesTeamASlider)
         //                    + "\n" + "Team B: Index - " + teamBPlayerListIndex + " ID -  " + TwoTeam_SharedData.teamBPlayerOrderedList[teamBPlayerListIndex] + " Matrix - " + string.Join(", ", probabilitiesTeamBFastball) + " >< " + string.Join(", ", probabilitiesTeamBCurveball) + " >< " + string.Join(", ", probabilitiesTeamBSlider);
     }
@@ -570,20 +620,31 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
         // Check if the game should end after the second inning
         // The game should also end when the changing side to team B is the last one and team B is ahead of team A
-        if ((inning > totalInning) || ((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
+        bool teamAWins = (inningScoresA[0] > inningScoresB[0]) ? true : false;
+        if ((inning > totalInning) || ((inning == totalInning) && (teamAtBat == "B") && !teamAWins)) {
             gameEnded = true;
             UpdateButtonGUI();
             finalScore = "最終得分:\n" + "紅隊: " + inningScoresA[0] + " \n(第1局: " + inningScoresA[1] + ", 第2局: " + inningScoresA[2] + ", 第3局: " + inningScoresA[3] 
                                                                         + ", 第4局: " + inningScoresA[4] + ", 第5局: " + inningScoresA[5] + ", 第6局: " + inningScoresA[6] + ")\n"
                 + "籃隊: " + inningScoresB[0] + " \n(第1局: " + inningScoresB[1] + ", 第2局: " + inningScoresB[2] + ", 第3局: " + inningScoresB[3] 
                 + ", 第4局: " + inningScoresB[4] + ", 第5局: " + inningScoresB[5] + ", 第6局: " + inningScoresB[6] + ")";
-            List<Sprite> winAnimation = (inningScoresA[0] > inningScoresB[0]) ? winRedAnimation : winBlueAnimation;
+            List<Sprite> winAnimation = teamAWins ? winRedAnimation : winBlueAnimation;
             StartImageAnimation(winAnimation);
-            prompt = "比賽結束！";
+            prompt = "比賽結束，";
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+            if (teamAWins) {
+                prompt = prompt + "紅隊獲勝！";
+                audioSourceTTSClip = redWinAnnounceClip;
+            } else {
+                prompt = prompt + "藍隊獲勝！";
+                audioSourceTTSClip = blueWinAnnounceClip;
+            }
+            GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
             GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
             GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(gameOverSoundClip);
-            if (((inning == totalInning) && (teamAtBat == "B") && (inningScoresA[0] < inningScoresB[0]))) {
-                prompt = "比賽結束！上半局結果已定。";
+            if (((inning == totalInning) && (teamAtBat == "B") && !teamAWins)) {
+                prompt = prompt + "上半局結果已定。";
             }
         } else {
             finalScore  = "這局結束，攻守交換。";
@@ -598,6 +659,48 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 teamBCurPlayerObj.SetActive(true);
                 teamBCurPitcherObj.SetActive(false);
             }
+            PlayOneShotSwitchInningAnnounce();
+        }
+    }
+
+    void PlayOneShotSwitchInningAnnounce() {
+        bool startGame = false;
+        GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
+        if (teamAtBat == "A") {
+            if (inning == 1) {
+                startGame = true;
+                audioSourceTTSClip2 = inning_1_1_AnnounceClip;
+            } else if (inning == 2) {
+                audioSourceTTSClip2 = inning_2_1_AnnounceClip;
+            } else if (inning == 3) {
+                audioSourceTTSClip2 = inning_3_1_AnnounceClip;
+            } else if (inning == 4) {
+                audioSourceTTSClip2 = inning_4_1_AnnounceClip;
+            } else if (inning == 5) {
+                audioSourceTTSClip2 = inning_5_1_AnnounceClip;
+            } else {
+                audioSourceTTSClip2 = inning_6_1_AnnounceClip;
+            }
+        } else {
+            if (inning == 1) {
+                audioSourceTTSClip2 = inning_1_2_AnnounceClip;
+            } else if (inning == 2) {
+                audioSourceTTSClip2 = inning_2_2_AnnounceClip;
+            } else if (inning == 3) {
+                audioSourceTTSClip2 = inning_3_2_AnnounceClip;
+            } else if (inning == 4) {
+                audioSourceTTSClip2 = inning_4_2_AnnounceClip;
+            } else if (inning == 5) {
+                audioSourceTTSClip2 = inning_5_2_AnnounceClip;
+            } else  {
+                audioSourceTTSClip2 = inning_6_2_AnnounceClip;
+            }
+        }
+        GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().clip = audioSourceTTSClip2;
+        if (!startGame) {
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().PlayDelayed(audioSourceTTSClip.length);
+        } else {
+            GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Play();
         }
     }
 

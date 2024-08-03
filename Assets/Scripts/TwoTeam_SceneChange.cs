@@ -32,4 +32,19 @@ public class TwoTeamSceneChange : MonoBehaviour
         SceneManager.LoadSceneAsync("TwoTeams");
     }
 
+    public void ClickButtonSound()
+    {
+        GameObject.Find("ButtonClickAudioSource").GetComponent<AudioSource>().Play();
+    }
+
+    public void SelectButtonSound()
+    {
+        GameObject.Find("ButtonSelectAudioSource").GetComponent<AudioSource>().Play();
+    }
+
+    public void StartButtonSound()
+    {
+        GameObject.Find("ButtonStartAudioSource").GetComponent<AudioSource>().Play();
+    }
+
 }

@@ -20,14 +20,14 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     bool gameEnded;
     string hiOutcome;
     string prompt, onBaseInfo, outsInfo, scoreInfo, inningInfo, finalScore;
-    string playerStatusPrompt;
+    //string playerStatusPrompt;
     string pitchType, hitType;
 
     public GameObject tryAgainButton, settingsButton;
 
     public AudioClip hitSoundClip, outSoundClip;
     public AudioClip firstBaseSoundClip, secondBaseSoundClip, thirdBaseSoundClip, gameOverSoundClip;
-    public AudioClip homeRunAnnounceClip, firstBaseAnnounceClip, secondBaseAnnounceClip, thirdBaseAnnounceClip, missAnnounceClip, outAnnounceClip;
+    public AudioClip homeRunAnnounceClip, firstBaseAnnounceClip, secondBaseAnnounceClip, thirdBaseAnnounceClip, missAnnounceClip, outAnnounceClip, foullBallAnnounceClip;
     public AudioClip strikeAnnounceClip, ballAnnounceClip;
     public AudioClip inning_1_1_AnnounceClip, inning_1_2_AnnounceClip, inning_2_1_AnnounceClip, inning_2_2_AnnounceClip,
                      inning_3_1_AnnounceClip, inning_3_2_AnnounceClip, inning_4_1_AnnounceClip, inning_4_2_AnnounceClip,
@@ -55,18 +55,18 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     string teamACurrentPlayer, teamBCurrentPlayer;
     static System.Random rnd = new System.Random();
 
-    // "Miss", "Single", "Double", "Triple", "HomeRun", "Out" 
+    // "FoulBall", "Miss", "Single", "Double", "Triple", "HomeRun", "Out" 
 
-    List<string> choices = new List<string> { "揮棒落空", "一壘安打", "二壘安打", "三壘安打", "全壘打", "接殺" };
+    List<string> choices = new List<string> { "界外球", "揮棒落空", "一壘安打", "二壘安打", "三壘安打", "全壘打", "接殺" };
     // Probabilities for Team A
     //List<double> probabilitiesTeamA = new List<double> { 0.32, 0.13, 0.05, 0.05, 0.45 };
     /*List<double> probabilitiesTeamAFastball = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };
     List<double> probabilitiesTeamACurveball = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };
     List<double> probabilitiesTeamASlider = new List<double> { 0, 0.32, 0.13, 0.05, 0.05, 0.45 };*/
     
-    List<double> probabilitiesTeamAFastball = new List<double> { 0.18, 0.17, 0.14, 0.01, 0.04, 0.46 };
-    List<double> probabilitiesTeamACurveball = new List<double> { 0.25, 0.145, 0.15, 0.005, 0.05, 0.4 };
-    List<double> probabilitiesTeamASlider = new List<double> { 0.22, 0.156, 0.07, 0.004, 0.01, 0.54 };
+    List<double> probabilitiesTeamAFastball = new List<double> { 0.12, 0.06, 0.17, 0.14, 0.01, 0.04, 0.46 };
+    List<double> probabilitiesTeamACurveball = new List<double> { 0.16, 0.09, 0.145, 0.15, 0.005, 0.05, 0.4 };
+    List<double> probabilitiesTeamASlider = new List<double> { 0.14, 0.08, 0.156, 0.07, 0.004, 0.01, 0.54 };
 
     // Probabilities for Team B
     //List<double> probabilitiesTeamB = new List<double> { 0.28, 0.15, 0.07, 0.03, 0.47 };
@@ -74,9 +74,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     List<double> probabilitiesTeamBCurveball = new List<double> { 0, 0.28, 0.15, 0.07, 0.03, 0.47 };
     List<double> probabilitiesTeamBSlider = new List<double> { 0, 0.28, 0.15, 0.07, 0.03, 0.47 };*/
 
-    List<double> probabilitiesTeamBFastball = new List<double> { 0.15, 0.165, 0.14, 0.015, 0.05, 0.48 };
-    List<double> probabilitiesTeamBCurveball = new List<double> { 0.2, 0.1, 0.11, 0.02, 0.05, 0.52 };
-    List<double> probabilitiesTeamBSlider = new List<double> { 0.25, 0.14, 0.05, 0.01, 0.03, 0.52 };
+    List<double> probabilitiesTeamBFastball = new List<double> { 0.1, 0.05 , 0.165, 0.14, 0.015, 0.05, 0.48 };
+    List<double> probabilitiesTeamBCurveball = new List<double> { 0.13, 0.07, 0.1, 0.11, 0.02, 0.05, 0.52 };
+    List<double> probabilitiesTeamBSlider = new List<double> { 0.16, 0.09, 0.14, 0.05, 0.01, 0.03, 0.52 };
 
     List<float> probabilitiesWaitTeamA = new List<float> { 0.7f, 0.4f, 0.5f }; // Fastball, Curveball, Slider
     List<float> probabilitiesWaitTeamB = new List<float> { 0.7f, 0.37f, 0.5f }; // Fastball, Curveball, Slider
@@ -288,7 +288,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         scoreInfo = "";
         inningInfo = "";
         finalScore= "";
-        playerStatusPrompt = "";
+        //playerStatusPrompt = "";
 
         pitchType = GameObject.Find("PitchValueLabel").GetComponent<TextMeshProUGUI>().text;
         hitType = GameObject.Find("HitValueLabel").GetComponent<TextMeshProUGUI>().text;
@@ -362,7 +362,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     void HitOutcomeProcessing()
     {
 
-        if(hiOutcome == choices[5]/*Out*/) {
+        if(hiOutcome == choices[6]/*Out*/) {
             // Reset the strike and ball count after each hit or wait
             outs = outs + 1;
             strikes = 0;
@@ -378,7 +378,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             prompt = "打者已揮棒，但被「" + hiOutcome + "」。";
             GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
         } else {
-            if (hiOutcome == choices[1]/*Single*/) {
+            if (hiOutcome == choices[2]/*Single*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -392,7 +392,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
-            } else if (hiOutcome == choices[2]/*Double*/) {
+            } else if (hiOutcome == choices[3]/*Double*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -406,7 +406,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
-            } else if (hiOutcome == choices[3]/*Triple*/) {
+            } else if (hiOutcome == choices[4]/*Triple*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -420,7 +420,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
-            } else if (hiOutcome == choices[4]/*HomeRun*/) {
+            } else if (hiOutcome == choices[5]/*HomeRun*/) {
                 // Reset the strike and ball count after each hit or wait
                 strikes = 0;
                 balls = 0;
@@ -432,7 +432,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」！";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
-            } else if (hiOutcome == choices[0]/*Miss*/) {
+            } else if (hiOutcome == choices[1]/*Miss*/) {
                 GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
                 audioSourceTTSClip = missAnnounceClip;
@@ -448,6 +448,23 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 }
                 // Update the text prompt
                 prompt = "打者已揮棒，但「" + hiOutcome + "」。";
+            } else if (hiOutcome == choices[0]/*FoulBall*/) {
+                GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().Stop();
+                audioSourceTTSClip = foullBallAnnounceClip;
+                GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
+                strikes = Mathf.Min(strikes + 1, 3);
+                if(strikes == 3) {
+                    outs = outs + 1;
+                    strikes = 0;  // Reset strikes count after a strikeout
+                    balls = 0;
+                    changePlayer();
+                    GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
+                    GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(outSoundClip);
+                }
+                // Update the text prompt
+                prompt = "打者已揮棒，但是個「" + hiOutcome + "」。";
+                GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
             }
         }
 

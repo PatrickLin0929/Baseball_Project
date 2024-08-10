@@ -12,7 +12,7 @@ public class TwoTeam_TeamInfo : MonoBehaviour
     public List<GameObject> teamAPlayerButtonObject;
     public List<GameObject> teamBPlayerButtonObject;
     public List<Sprite> playerSpriteList;
-    int totalPlayers = 18;
+    //int totalPlayers = 18;
     public Canvas teamInfoCanvas, playerInfoCanvas;
     string selectedPlayerButtonName;
     public Image playerInfoImage;

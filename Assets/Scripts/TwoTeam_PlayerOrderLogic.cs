@@ -208,8 +208,27 @@ public class TwoTeam_PlayerOrderLogic : MonoBehaviour
             //UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(PlayerButtonObject[RandomSelectedIndex[i]]);
             //selectedPlayerButtonName = PlayerButtonObject[RandomSelectedIndex[i]].name;
             //PlayerButtonSelected(PlayerButtonObject[RandomSelectedIndex[i]]);
-            PlayerButtonSelected(teamAPlayerButtonObject[RandomPlayerASelectedIndex[i]], "A", true);
-            PlayerButtonSelected(teamBPlayerButtonObject[RandomPlayerBSelectedIndex[i]], "B", true);
+            bool skipTeamA = false;
+            GameObject gameObj = teamAPlayerButtonObject[RandomPlayerASelectedIndex[i]];
+            Button btnObject = gameObj.GetComponent<Button>();
+            string playerTextName = btnObject.GetComponentInChildren<TMP_Text>().text;
+            if(playerTextName.Contains("第") && playerTextName.Contains("棒")) {
+                skipTeamA = true;
+            } else {
+                PlayerButtonSelected(teamAPlayerButtonObject[RandomPlayerASelectedIndex[i]], "A", true);
+            }
+            bool skipTeamB = false;
+            gameObj = teamBPlayerButtonObject[RandomPlayerBSelectedIndex[i]];
+            btnObject = gameObj.GetComponent<Button>();
+            playerTextName = btnObject.GetComponentInChildren<TMP_Text>().text;
+            if(playerTextName.Contains("第") && playerTextName.Contains("棒")) {
+                skipTeamB = true;
+            } else {
+                PlayerButtonSelected(teamBPlayerButtonObject[RandomPlayerBSelectedIndex[i]], "B", true);
+            }
+            if(skipTeamA && skipTeamB) {
+                continue;
+            }
             yield return new WaitForSeconds(0.2F);
         }
     }

@@ -20,6 +20,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
     public List<GameObject> PlayerButtonObject;
     public List<Sprite> playerSpriteList;
     public Image playerInfoImage;
+    bool randomSelecting;
 
     // Start is called before the first frame update
     void Start()
@@ -45,8 +46,10 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
                 GameObject.Find("ConfirmButton").GetComponent<Button>().interactable = true;
                 GameObject.Find("ShowInfoButton").GetComponent<Button>().interactable = true;
             } else {
-                selectedTitle = "請選擇各自隊伍的球員";
-                prompt = "";
+                if (randomSelecting == false) {
+                    selectedTitle = "請選擇各自隊伍的球員";
+                    prompt = "";
+                }
                 GameObject.Find("ConfirmButton").GetComponent<Button>().interactable = false;
                 GameObject.Find("ShowInfoButton").GetComponent<Button>().interactable = false;
             }
@@ -77,6 +80,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
 
     public void ConfirmButtonPressed()
     {
+
         Button btnObject = GameObject.Find(selectedPlayerButtonName).GetComponent<Button>();
 
         if(!btnObject.interactable)
@@ -128,6 +132,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
 
     public void OpenInfoCanvasButtonPressed()
     {
+
         Button btnObject = GameObject.Find(selectedPlayerButtonName).GetComponent<Button>();
 
         // Save the player button clicked for later use
@@ -170,8 +175,12 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
     public void PlayerButtonSelected(GameObject gameObj)
     {
         selectedPlayerButtonName = gameObj.name;
+
         Button btnObject = gameObj.GetComponent<Button>();
         string playerTextName = btnObject.GetComponentInChildren<TMP_Text>().text;
+        if(playerTextName == "已選擇") {
+            return;
+        }
         int playerIndexInMatrix = TwoTeam_SharedData.playerList.FindIndex(playerName => playerName==playerTextName);
         List<string> playerInfo = TwoTeam_SharedData.playerList_Info[playerIndexInMatrix];
 
@@ -189,6 +198,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
         selectedPlayerButtonName = "";
         prompt = "";
         selectedTitle = "請選擇各自隊伍的球員";
+        randomSelecting = false;
         
         for(int i = 0;i<PlayerButtonObject.Count;i++)
         {
@@ -199,6 +209,7 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
     }
 
     public void AutoSelectButtonPressed() {
+        randomSelecting = true;
         autoSelectButton.GetComponent<Button>().interactable = false;
         showInfoButton.GetComponent<Button>().interactable = false;
         confirmButton.GetComponent<Button>().interactable = false;
@@ -218,6 +229,12 @@ public class TwoTeam_PlayerSelectLogic : MonoBehaviour
         List<int> RandomSelectedIndex = SelectedIndex.OrderBy(x => Guid.NewGuid()).ToList();
         for(int i = 0;i<totalPlayers;i++)
         {
+            GameObject gameObj = PlayerButtonObject[RandomSelectedIndex[i]];
+            Button btnObject = gameObj.GetComponent<Button>();
+            string playerTextName = btnObject.GetComponentInChildren<TMP_Text>().text;
+            if(playerTextName == "已選擇") {
+                continue;
+            }
             //UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(PlayerButtonObject[RandomSelectedIndex[i]]);
             //selectedPlayerButtonName = PlayerButtonObject[RandomSelectedIndex[i]].name;
             PlayerButtonSelected(PlayerButtonObject[RandomSelectedIndex[i]]);

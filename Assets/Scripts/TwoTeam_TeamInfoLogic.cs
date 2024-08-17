@@ -34,11 +34,13 @@ public class TwoTeam_TeamInfo : MonoBehaviour
     public void OpenTeamInfoCanvasPressed()
     {
         teamInfoCanvas.enabled = true;
+        TwoTeam_SharedData.canvasOpened = true;
     }
 
     public void CloseTeamInfoCanvasPressed()
     {
         teamInfoCanvas.enabled = false;
+        TwoTeam_SharedData.canvasOpened = false;
     }
 
     public void PlayerButtonSelected(GameObject gameObj)

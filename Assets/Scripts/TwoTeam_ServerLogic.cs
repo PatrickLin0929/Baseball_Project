@@ -23,7 +23,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     //string playerStatusPrompt;
     string pitchType, hitType;
 
-    public GameObject tryAgainButton, settingsButton;
+    public GameObject tryAgainButton, settingsButton, teamInfoButton, exitButton;
 
     public AudioClip hitSoundClip, outSoundClip;
     public AudioClip firstBaseSoundClip, secondBaseSoundClip, thirdBaseSoundClip, gameOverSoundClip;
@@ -43,8 +43,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     GameObject planeToAnimate;
     public GameObject teamACurPlayerObj, teamBCurPlayerObj, teamACurPitcherObj, teamBCurPitcherObj;
     float frameRate = 5.0f;    // Frames per second.
-    float imageFrameRate = 10.0f;
+    float imageFrameRate = 2.5f;
     int currentFrame = 0;     // Index of the current frame.
+    int currentImageFrame = 0;     // Index of the current image frame.
     // float timer = 0.0f;       // Timer to control frame rate.
     public List<Sprite> pitcherBlueAnimation, pitcherRedAnimation, hitterBlueAnimation, hitterRedAnimation, winBlueAnimation, winRedAnimation, playerSpriteList;
     public List<Material> pitcherBluePlaneAnimation, pitcherRedPlaneAnimation, hitterBluePlaneAnimation, hitterRedPlaneAnimation;
@@ -125,9 +126,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
     void StartImageAnimation(List<Sprite> animation)
     {
         frames = animation;
-        currentFrame = 0;
+        currentImageFrame = 0;
         // timer = 0.0f;
-        imageToAnimate.sprite = frames[currentFrame];
+        imageToAnimate.sprite = frames[currentImageFrame];
         StartCoroutine(AnimateImage());
     }
 
@@ -144,13 +145,13 @@ public class TwoTeam_ServerLogic : MonoBehaviour
 
     private IEnumerator AnimateImage()
     {
-        while (currentFrame < frames.Count)
+        while (currentImageFrame < frames.Count)
         {
             yield return new WaitForSeconds(1.0f / imageFrameRate);
-            currentFrame++;
-            if (currentFrame < frames.Count)
+            currentImageFrame++;
+            if (currentImageFrame < frames.Count)
             {
-                imageToAnimate.sprite = frames[currentFrame];
+                imageToAnimate.sprite = frames[currentImageFrame];
             }
         }
     }
@@ -211,8 +212,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             GameObject.Find("HitButton").GetComponent<Button>().interactable = false;
             GameObject.Find("AutoplayButton").GetComponent<Button>().interactable = false;
             settingsButton.SetActive(false);
+            teamInfoButton.SetActive(false);
             tryAgainButton.SetActive(true);
-            //exitButton.SetActive(true);
+            exitButton.SetActive(true);
         } else {
             if(TwoTeam_SharedData.pitchThrown) {
                 GameObject.Find("PitchButton").GetComponent<Button>().interactable = false;
@@ -277,6 +279,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         TwoTeam_SharedData.pitchThrown = false;
         TwoTeam_SharedData.dynamicViewPoint = false;
         TwoTeam_SharedData.startTesting = false;
+        TwoTeam_SharedData.canvasOpened = false;
 
         gameEnded = false;
 
@@ -389,6 +392,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(firstBaseSoundClip);
                 MoveRunners(1);
+                changePlayer();
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
@@ -403,6 +407,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(secondBaseSoundClip);
                 MoveRunners(2);
+                changePlayer();
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
@@ -417,6 +422,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().Stop();
                 GameObject.Find("Audio Source").GetComponent<AudioSource>().PlayOneShot(thirdBaseSoundClip);
                 MoveRunners(3);
+                changePlayer();
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」。";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
@@ -429,6 +435,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 audioSourceTTSClip = homeRunAnnounceClip;
                 GameObject.Find("Audio Source TTS").GetComponent<AudioSource>().PlayOneShot(audioSourceTTSClip);
                 MoveRunners(4);
+                changePlayer();
                 // Update the text prompt
                 prompt = "打者擊出了一個「" + hiOutcome + "」！";
                 GameObject.Find("ButtonHitterAudioSource").GetComponent<AudioSource>().Play();
@@ -517,6 +524,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         
         if(balls == 4) {
             MoveRunners(1);
+            changePlayer();
             balls = 0;  // Reset balls count after a walk
             strikes = 0;  // Reset strikes count after a strikeout
         } else if(strikes == 3) {
@@ -588,7 +596,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         }
         // Clear the bases after scoring
         onThird = false;
-        changePlayer();
+        //changePlayer();
     }
 
     void UpdateGameStatus() {

@@ -9,6 +9,8 @@ public class TwoTeam_SharedData : MonoBehaviour
     public static bool dynamicViewPoint = false;
     public static bool startTesting = false;
 
+    public static bool canvasOpened = false;
+
     // Start is called before the first frame update
     // Player selection list
     public static List<int> teamAPlayerList = new List<int>();

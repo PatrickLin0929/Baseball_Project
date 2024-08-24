@@ -199,6 +199,9 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         GameObject.Find("PlaneSecond").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
         GameObject.Find("PlaneThird").GetComponent<Renderer>().material = (teamAtBat == "A") ? runnerIconRed : runnerIconBlue;
 
+        GameObject.Find("PitchTypeImage").GetComponent<Image>().color = (teamAtBat == "A") ? new Color32(0, 61, 143, 150) : new Color32(140, 8, 0, 150);
+        GameObject.Find("HitTypeImage").GetComponent<Image>().color = (teamAtBat == "A") ? new Color32(140, 8, 0, 150) : new Color32(0, 61, 143, 150);
+
         //GameObject.Find("PlanePitcher").GetComponent<Renderer>().material = (teamAtBat == "A") ? pitcherIconBlue : pitcherIconRed;
         //GameObject.Find("PlaneHitter").GetComponent<Renderer>().material = (teamAtBat == "A") ? hitterIconRed : hitterIconBlue;
 
@@ -508,6 +511,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
             }
         }
 
+
         if(strikeOrBall) {
             strikes = Mathf.Min(strikes + 1, 3);
             GameObject.Find("Audio Source TTS 2").GetComponent<AudioSource>().Stop();
@@ -523,7 +527,7 @@ public class TwoTeam_ServerLogic : MonoBehaviour
         }
         
         if(balls == 4) {
-            MoveRunners(1);
+            PushRunners(1); // A sepcial procedure to handle player moving bases
             changePlayer();
             balls = 0;  // Reset balls count after a walk
             strikes = 0;  // Reset strikes count after a strikeout
@@ -578,6 +582,20 @@ public class TwoTeam_ServerLogic : MonoBehaviour
                 onSecond = onFirst;
                 onFirst = true;
             }
+        }
+    }
+
+    void PushRunners(int bases)
+    {
+        // Currently four balls only casue one push runners
+        if (bases == 1) {
+            if(onThird && onSecond && onFirst) {
+                UpdateScore();
+            }
+            // Keep the current base status unless there is a push from lower bases
+            onThird = (onFirst && onSecond) ? true : onThird;
+            onSecond = (onFirst) ? true : onSecond;
+            onFirst = true;
         }
     }
 
